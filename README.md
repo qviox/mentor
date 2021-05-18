@@ -100,3 +100,13 @@ yii migrate --migrationPath=@qviox/mentor/migrations --interactive=0
 >5.7  Сохранение формы задания (POST)
 `/mentor/api/ajax/save-task-data` 
 
+>Образцы полей формы
+> `id - id поля`
+
+`<input type="text" class="form-control" name="TaskInput[id]">`
+
+`<textarea class="form-control" name="TaskInput[id]"></textarea>`
+
+`<input type="file" class="form-control" name="TaskInputFile[TaskInputFiles][id][]">`
+
+`<input type="file" class="form-control" name="TaskInputFile[TaskInputFiles][id][]" multiple="">`
