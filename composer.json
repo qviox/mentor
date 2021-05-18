@@ -1,0 +1,23 @@
+{
+    "name": "qviox/yii2-mentor",
+    "description": "mentor",
+    "type": "yii2-extension",
+    "authors": [
+        {
+            "name": "Andrey Malyshev",
+            "email": "andruxamal@yandex.ru"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "yiisoft/yii2": "~2.0.0"
+    },
+    "extra": {
+        "bootstrap": "qviox\\mentor\\Bootstrap"
+    },
+    "autoload": {
+        "psr-4": {
+            "qviox\\mentor\\": "src"
+        }
+    }
+}
