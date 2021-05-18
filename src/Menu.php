@@ -3,7 +3,7 @@ namespace qviox\mentor;
 use qviox\mentor\models\rbac\URole;
 
 class Menu{
-    public function getAdminMenu(){
+    public static function getAdminMenu(){
 
         if(URole::checkUserAccess('RBAC'))
             $items[]=['label' => 'Управление ролями', 'icon' => 'user', 'url' => ['/mentor/rbac/user-role']];
