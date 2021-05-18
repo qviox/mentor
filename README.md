@@ -64,7 +64,7 @@ yii migrate --migrationPath=@qviox/mentor/migrations --interactive=0
  
 4.Методы
 -----
-######4.1.  Получение списка ссылок для админки
+>4.1.  Получение списка ссылок для админки
 ```php
  @qviox/mentor/Menu::getAdminMenu()
  
@@ -79,18 +79,24 @@ yii migrate --migrationPath=@qviox/mentor/migrations --interactive=0
 5.Список методов api
 -----
 
-######5.1.  Получение рейтинга участников 
+>5.1.  Получение рейтинга участников 
 `/mentor/api/ajax/get-users-rate` 
-######5.2  Получение общего бала
+
+>5.2  Получение общего бала
 `/mentor/api/ajax/get-total-points-by-session` 
-######5.3  Получение навыков пользователя
+
+>5.3  Получение навыков пользователя
 `/mentor/api/ajax/get-user-skills` 
-######5.4  Получение командного рейтинга
+
+>5.4  Получение командного рейтинга
 `/mentor/api/ajax/get-teams-rate` 
-######5.5  Проверка выполнил ли пользователь уже задание
+
+>5.5  Проверка выполнил ли пользователь уже задание
 `/mentor/api/ajax/check-task-questionnaire?taskId=id` 
-######5.6  Сохранение анкеты пользователя (POST)
+
+>5.6  Сохранение анкеты пользователя (POST)
 `/mentor/api/ajax/set-competition-questionnaire` 
-######5.7  Сохранение формы задания (POST)
+
+>5.7  Сохранение формы задания (POST)
 `/mentor/api/ajax/save-task-data` 
 
