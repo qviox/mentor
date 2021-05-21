@@ -2,6 +2,7 @@
 namespace qviox\mentor\controllers\mentor;
 
 use qviox\mentor\controllers\mentor\RuleController;
+use qviox\mentor\models\rbac\URole;
 use qviox\mentor\models\scores\Task;
 use qviox\mentor\models\scores\TaskInput;
 use qviox\mentor\models\scores\TaskInputValue;
@@ -38,7 +39,7 @@ class TaskQuestionnaireController extends RuleController
 
         $task_inputs=null;
         $searchModel = new TaskQuestionnaireSearch();
-        $dataProvider = $searchModel->search($task_id=$taskId,$task_inputs,Yii::$app->request->queryParams, $availableUserIds);
+        $dataProvider = $searchModel->search($taskId,$task_inputs,Yii::$app->request->queryParams, $availableUserIds);
 
         return $this->render('index', [
             'task_inputs'=>$task_inputs,
@@ -63,7 +64,7 @@ class TaskQuestionnaireController extends RuleController
             $mentor = Yii::$app->user;
             $userTask = UserTask::findOne(['user_id' => $user->id, 'task_id' => $task->id])??new UserTask();
 
-            if (!$user->team || $user->team->mentor_id != $mentor->id) {
+            if ((!$user->team || $user->team->mentor_id != $mentor->id) && !URole::checkUserAccess('RBAC')) {
                 Yii::$app->session->setFlash('error', 'Нет прав для данного действия');
                 return $this->redirect(Yii::$app->request->referrer);
             }

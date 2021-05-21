@@ -16,6 +16,7 @@ class m210507_102028_mentor_create_task_input_table extends Migration
             'id' => $this->primaryKey(),
             'task_id' => $this->integer()->notNull(),
             'type' => $this->integer()->notNull(),
+            'access_level' => $this->integer()->defaultValue(\qviox\mentor\models\scores\TaskInput::ACCESS_LEVEL_PRIVATE),
             'name' => $this->string(),
             'title' => $this->string(),
             'description' => $this->string(),

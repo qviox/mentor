@@ -17,9 +17,9 @@ class m210511_120653_mentor_create_urole_table extends Migration
             'type' => $this->string()->notNull(),
             'label' => $this->string()->notNull(),
         ]);
-
-        $this->insert('mentor_urole', ['type' => 'ROLE_ADMIN', 'label' => 'Админ']);
-        $this->insert('mentor_urole', ['type' => 'ROLE_MENTOR', 'label' => 'Ментор']);
+        $this->insert('mentor_urole', ['id'=>2,'type' => 'ROLE_SUPERADMIN', 'label' => 'СуперАдмин']);
+        $this->insert('mentor_urole', ['id'=>3,'type' => 'ROLE_ADMIN', 'label' => 'Админ']);
+        $this->insert('mentor_urole', ['id'=>4,'type' => 'ROLE_MENTOR', 'label' => 'Ментор']);
 
 
     }

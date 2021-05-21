@@ -1,6 +1,6 @@
 <?php
 
-namespace qviox\mentor\models;
+namespace qviox\mentor\models\scores;
 
 use Yii;
 use yii\behaviors\TimestampBehavior;

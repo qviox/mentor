@@ -15,19 +15,29 @@ class TaskQuestionnaireSearch extends TaskInputValue
             [['id','email'], 'safe'],
         ];
     }
+    public function getQueryForSearch($task_inputs){
+
+    }
     public function search($task_id,&$task_inputs,$params, $userIds = null)
     {
         $query=new Query();
-        $task_inputs=TaskInput::findAll(['task_id'=>$task_id]);
+        $task_inputs=TaskInput::find()->where(['task_id'=>$task_id])->andWhere(['!=','type',TaskInput::TYPE_TEXT])->all();
         $tast_input_name_as_col='';
 
         foreach($task_inputs as $task_input){
-            $tast_input_name_as_col.=',(SELECT val FROM `mentor_task_input_value` as tiv  WHERE tiv.user_id=u.id AND tiv.task_input_id='.$task_input->id.') AS "'.$task_input->name.'"';
+            $taskInputsIds[]=$task_input->id;
+            $tast_input_name_as_col.=',(SELECT val FROM `mentor_task_input_value` as tiv  WHERE tiv.user_id=u.id AND tiv.task_input_id='.$task_input->id.' limit 1) AS "'.$task_input->name.'"';
+
             $task_inputs_label[$task_input->name]=$task_input->title;
         }
-        $query->select('u.id,u.email'.$tast_input_name_as_col)
+        $userIdsFilledTIV=TaskInputValue::find()->select('user_id')->where(['in','task_input_id',$taskInputsIds])->groupBy('user_id')->column();
+
+        $query->select(' u.id,u.email '.$tast_input_name_as_col)
             ->from('user u')
-            ->where(['u.id'=>$userIds ?? $this->user_id])
+            ->where(['in','u.id',$userIdsFilledTIV])
+//            ->where(['u.id'=>89])
+//            ->andWhere(['tiv.val'=>1])
+//            ->where(['u.id'=>$userIds ?? $this->user_id])
 //            ->where(['user_id'=>$user_id])
         ;
 
@@ -40,7 +50,7 @@ class TaskQuestionnaireSearch extends TaskInputValue
 
         $this->load($params);
         $query->andFilterWhere(['or', ['like', 'email', $this->email]]);
-        $query->andFilterWhere(['or', [ 'id'=> $this->id]]);
+        $query->andFilterWhere(['or', [ 'u.id'=> $this->id]]);
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
             // $query->where('0=1');

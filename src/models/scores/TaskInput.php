@@ -14,7 +14,9 @@ class TaskInput extends \yii\db\ActiveRecord
     const TYPE_STRING=1;
     const TYPE_TEXT=2;
     const TYPE_FILE=3;
-    const TYPE_FILES=4;
+    const TYPE_BOOL_YES_NO=4;
+    const ACCESS_LEVEL_PRIVATE=1;
+    const ACCESS_LEVEL_PUBLIC=2;
     /**
      * {@inheritdoc}
      */
@@ -25,7 +27,7 @@ class TaskInput extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['task_id','type'], 'integer'],
+            [['task_id','type','access_level'], 'integer'],
             [['name','title','description'], 'string', 'max' => 255],
             [['name','title','description','type','task_id'], 'required'],
             ['name', 'validateUniqueName'],
@@ -40,6 +42,7 @@ class TaskInput extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Название поля (Англ., без пробелов)',
             'type' => 'Тип поля',
+            'access_level' => 'Уровень доступа',
             'title' => 'Заголовок',
             'description' => 'Описание',
         ];
@@ -50,7 +53,14 @@ class TaskInput extends \yii\db\ActiveRecord
             self::TYPE_STRING => 'Строка',
             self::TYPE_TEXT => 'Текст',
             self::TYPE_FILE => 'Файл',
-            self::TYPE_FILES => 'Файлы',
+            self::TYPE_BOOL_YES_NO => 'Да/Нет',
+        ];
+    }
+    public static function accessLevelLabels()
+    {
+        return [
+            self::ACCESS_LEVEL_PRIVATE => 'Приватный',
+            self::ACCESS_LEVEL_PUBLIC => 'Общедоступный',
         ];
     }
     public function getTask(){
@@ -68,11 +78,12 @@ class TaskInput extends \yii\db\ActiveRecord
                 $input.= Html::textarea( $name, $value,$inputOptions);
                 break;
             case self::TYPE_FILE:
-                $input.= Html::fileInput( 'TaskInputFile[TaskInputFiles]'.'['.$this->id.'][]', null,$inputOptions);
-                break;
-            case self::TYPE_FILES:
                 $inputOptions['multiple']=true;
                 $input.= Html::fileInput( 'TaskInputFile[TaskInputFiles]'.'['.$this->id.'][]', null,$inputOptions);
+                break;
+
+            case self::TYPE_BOOL_YES_NO:
+//                $input.= Html::fileInput( 'TaskInputFile[TaskInputFiles]'.'['.$this->id.'][]', null,$inputOptions);
                 break;
         }
         return $input;
@@ -94,34 +105,24 @@ class TaskInput extends \yii\db\ActiveRecord
         return true;
     }
     public function saveTaskInputValue($value){
-
         if(!$this->validateTaskInputValue($value))
             return false;
         $taskInputValue=new TaskInputValue();
+
         $taskInputValue->task_input_id=$this->id;
         $taskInputValue->user_id=Yii::$app->user->id;
-        $taskInputValue->val=$value;
-        if($taskInputValue->save())
-            return true;
+        if($taskInputValue->taskInput->type==TaskInput::TYPE_FILE){
+            $filesPathInfo=$taskInputValue->loadFile($value);
+            $taskInputValue->val=$filesPathInfo['filesUrls'];
+
+        }else
+            $taskInputValue->val=$value;
+        if($taskInputValue->save()){
+            return  $filesPathInfo['filesPaths']??$taskInputValue->val;
+        }
+
         else
             throw new Exception(serialize($taskInputValue->errors));
-    }
-
-    public function saveTaskInputValueFile(){
-
-        if(!TaskInputValue::findOne(['user_id'=>Yii::$app->user->id,'task_input_id'=>$this->id])){
-            $taskInputValue=new TaskInputValue();
-            $taskInputFile=new TaskInputFile();
-            $taskInputValue->task_input_id=$this->id;
-            $taskInputValue->user_id=Yii::$app->user->id;
-            $taskInputFile->taskInputId=$this->id;
-            if($val=$taskInputFile->upload()){
-                $taskInputValue->val=$val;
-                if(!$taskInputValue->save())
-                    throw new Exception(serialize($taskInputValue->errors));
-                 return $val;
-            }
-      }
     }
     public function getTaskInputValueByUser($userId){
            return TaskInputValue::find()->where(['user_id'=>$userId,'task_input_id'=>$this->id])->one();

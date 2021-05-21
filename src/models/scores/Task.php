@@ -4,6 +4,7 @@ namespace qviox\mentor\models\scores;
 
 use qviox\mentor\components\enums\TaskType;
 use qviox\mentor\models\User;
+use yii\db\Exception;
 use Yii;
 /**
  * This is the model class for table "{{%task}}".
@@ -133,7 +134,37 @@ class Task extends \yii\db\ActiveRecord
        return $model->getFormInput();
 
     }
-    public function SaveTaskData(){
+    public function saveTaskQuestionnaire($data){
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+        foreach ($data as $key=>$item) {
+            $taskInput = $this->getModelInputByName($key);
+            if(!$taskInput)
+                throw new Exception('Cant find taskInput with name = '.$key);
+            $val = $taskInput->saveTaskInputValue($item);
 
+            if ($taskInput->type == TaskInput::TYPE_FILE) {
+                $paths[] = $val;
+            }
+        }
+            $transaction->commit();
+        } catch (Exception $e) {
+            foreach($paths as $path){
+                foreach(explode(';',$path) as $p){
+                    unlink($p);
+                }
+            }
+            $transaction->rollback();
+            return $e->getMessage();
+        }
+        return true;
+    }
+    public static function getTaskListForMenu(){
+//        $items[]=['label' => 'Импорт балов квиза', 'icon' => 'cloud-download', 'url' => ['/mentor/admin/import/import-quiz']];
+        foreach(self::find()->all() as $task){
+            $items[]=['label' => $task->name, 'icon' => 'users', 'url' => ['/mentor/admin/task-questionnaire','taskId'=>$task->id]];
+        }
+        return $items;
     }
 }

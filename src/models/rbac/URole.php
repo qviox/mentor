@@ -14,8 +14,9 @@ use qviox\mentor\models\rbac\UserURole;
  */
 class URole extends \yii\db\ActiveRecord
 {
-    const ROLE_ADMIN=1;
-    const ROLE_MENTOR=2;
+    const ROLE_SUPERADMIN=2;
+    const ROLE_ADMIN=3;
+    const ROLE_MENTOR=4;
     /**
      * {@inheritdoc}
      */

@@ -2,9 +2,10 @@
 namespace qviox\mentor\controllers\api;
 
 use qviox\mentor\controllers\api\base\ConfigController;
-use qviox\mentor\models\CompetitionQuestionnaire;
+use qviox\mentor\models\scores\CompetitionQuestionnaire;
 use qviox\mentor\models\scores\Skill;
 use qviox\mentor\models\scores\SkillUserPoint;
+use qviox\mentor\models\scores\Task;
 use qviox\mentor\models\scores\TaskInputValue;
 use qviox\mentor\models\scores\Team;
 use yii\web\Controller;
@@ -12,8 +13,7 @@ use qviox\mentor\models\scores\UserTask;
 use qviox\mentor\models\scores\TaskInput;
 use yii\db\Exception;
 use Yii;
-class AjaxController extends ConfigController {
-
+class AjaxReactController extends ConfigController {
 
     public function actionGetUsersRate()
     {
@@ -92,38 +92,43 @@ class AjaxController extends ConfigController {
             ->exists();
     }
 
-    public function actionSaveTaskData(){
-
-        $db = \Yii::$app->db;
-        $transaction = $db->beginTransaction();
-        try {
+    public function actionSetTaskQuestionnaire(){
             $post=Yii::$app->request->post();
             if($post){
-                $TaskInputs=$post['TaskInput'];
-                foreach($TaskInputs as $idTaskInput=>$item){
-                    $taskInput=TaskInput::findOne($idTaskInput);
-                    if(!$taskInput)
-                        return false;
-                    $taskInput->saveTaskInputValue($item);
-                }
+                $task_id=$post['task_id'];
+                $task=Task::findOne($task_id);
+                unset($post['task_id']);
+                return $task->saveTaskQuestionnaire($post);
             }
-            if($files=$_FILES['TaskInputFile']['name']['TaskInputFiles']){
-                foreach($files as $key=>$filename){
-                    $taskInput=TaskInput::findOne($key);
-                    $paths[]= $taskInput->saveTaskInputValueFile();
-                }
-            }
-            $transaction->commit();
-        } catch (Exception $e) {
-            foreach($paths as $path){
-                foreach(explode(';',$path) as $p){
-                    unlink(Yii::getAlias('@'.$p));
-                }
-            }
-            $transaction->rollback();
-            return $e->getMessage();
-        }
-
-        return 'success';
+        return false;
     }
+
+
+    public function actionCheckLessonProjectWorkSheet()
+    {
+
+        return Yii::$app->user->identity->lessonWorkSheet ? 0 : 1;
+
+    }
+    public function actionGetLessonProjectWorkSheets($params)
+    {
+        return LessonProjectWorksheets::find()->where(['show' => 1])->asArray()->all();
+    }
+    public function actionGetTaskQuestionnare()
+    {
+
+        if(!($post=Yii::$app->request->post()))
+            return false;
+        $task=Task::findOne($post['task_id']);
+        if(!$task)
+            return false;
+        foreach(explode(',',$post['needParams']) as $needParam){
+            $taskInput=TaskInput::find()->where(['access_level'=>TaskInput::ACCESS_LEVEL_PUBLIC,'name'=>$needParam])->one();
+            if(!$taskInput)
+                return 'Не найден параметр ('.$needParam.') или он не общедоступный';
+            $taskInputs[]=$taskInput;
+        }
+        return LessonProjectWorksheets::find()->where(['show' => 1])->asArray()->all();
+    }
+
 }
