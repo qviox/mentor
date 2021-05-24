@@ -134,20 +134,27 @@ class Task extends \yii\db\ActiveRecord
        return $model->getFormInput();
 
     }
-    public function saveTaskQuestionnaire($data){
+    public function saveTaskQuestionnaire($data,$user_id=null){
         $db = \Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
+        $keys=null;
         foreach ($data as $key=>$item) {
+            $keys[]=$key;
             $taskInput = $this->getModelInputByName($key);
             if(!$taskInput)
                 throw new Exception('Cant find taskInput with name = '.$key);
+            if($user_id)
+                $taskInput->user_id=$user_id;
+            else
+                $taskInput->user_id=Yii::$app->user->id;
             $val = $taskInput->saveTaskInputValue($item);
-
             if ($taskInput->type == TaskInput::TYPE_FILE) {
                 $paths[] = $val;
             }
         }
+            $this->saveEmptyTaskInputValueWithDefaultValue($keys);
+
             $transaction->commit();
         } catch (Exception $e) {
             foreach($paths as $path){
@@ -160,9 +167,15 @@ class Task extends \yii\db\ActiveRecord
         }
         return true;
     }
+    public function saveEmptyTaskInputValueWithDefaultValue($excludeTaskInputNames){
+        $emptyTaskInputs=TaskInput::find()->where('not in','name',$excludeTaskInputNames)->andWhere(['not',['default_value'=>null]])->all();
+        if($emptyTaskInputs)
+            foreach ($emptyTaskInputs as $emptyTaskInput){
+                $emptyTaskInputs->saveDefaultTaskInputValue();
+            }
+    }
     public static function getTaskListForMenu(){
-//        $items[]=['label' => 'Импорт балов квиза', 'icon' => 'cloud-download', 'url' => ['/mentor/admin/import/import-quiz']];
-        foreach(self::find()->all() as $task){
+    foreach(self::find()->all() as $task){
             $items[]=['label' => $task->name, 'icon' => 'users', 'url' => ['/mentor/admin/task-questionnaire','taskId'=>$task->id]];
         }
         return $items;

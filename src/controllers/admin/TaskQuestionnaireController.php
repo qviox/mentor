@@ -12,6 +12,14 @@ use yii\web\NotFoundHttpException;
  */
 class TaskQuestionnaireController extends RuleController
 {
+    public function beforeAction($action)
+    {
+        if ($action->id == 'index') {
+            $this->enableCsrfValidation = false;
+        }
+
+        return parent::beforeAction($action);
+    }
     /**
      * Lists all TaskQuestionnaire models.
      * @param $taskId
@@ -27,11 +35,15 @@ class TaskQuestionnaireController extends RuleController
 
 //        $params = Yii::$app->request->queryParams;
 //        $params['TaskQuestionnaireSearch']['task_id'] = $task->id;
-        $task_inputs=null;
         $searchModel = new  TaskQuestionnaireSearch();
-        $dataProvider = $searchModel->search($taskId,$task_inputs,Yii::$app->request->queryParams);
+        $searchModel->task_id=$taskId;
+        $searchModel->select_text_input=false;
+        if($get=Yii::$app->request->get())
+        {
+            $searchModel->filters[TaskQuestionnaireSearch::FilterByVal]=$get;
+        }
+        $dataProvider = $searchModel->search();
         return $this->render('/mentor/task-questionnaire/index', [
-            'task_inputs'=>$task_inputs,
             'taskId'=>$taskId,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

@@ -37,12 +37,25 @@ class TaskQuestionnaireController extends RuleController
             ->where(['team_id' => $teamIds])
             ->column();
 
-        $task_inputs=null;
-        $searchModel = new TaskQuestionnaireSearch();
-        $dataProvider = $searchModel->search($taskId,$task_inputs,Yii::$app->request->queryParams, $availableUserIds);
+//        $task_inputs=null;
+//        $searchModel = new TaskQuestionnaireSearch();
+//        $dataProvider = $searchModel->search($taskId);
+
+
+        $searchModel = new  TaskQuestionnaireSearch();
+        if($get=Yii::$app->request->get())
+            $searchModel->filters[TaskQuestionnaireSearch::FilterByVal]=$get;
+        $searchModel->filters[TaskQuestionnaireSearch::FilterByUserIds]=$availableUserIds;
+        $searchModel->task_id=$taskId;
+        $searchModel->select_text_input=false;
+        if($get=Yii::$app->request->get())
+        {
+            $searchModel->filters[TaskQuestionnaireSearch::FilterByVal]=$get;
+
+        }
+        $dataProvider = $searchModel->search();
 
         return $this->render('index', [
-            'task_inputs'=>$task_inputs,
             'taskId'=>$taskId,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -79,19 +92,19 @@ class TaskQuestionnaireController extends RuleController
                 }
 
                 if ($TaskInputs = Yii::$app->request->post()['TaskInput']) {
+
                     foreach ($TaskInputs as $taskInputId => $TaskInput) {
 
                         $input = TaskInput::findOne($taskInputId);
                         if ($input) {
                             $taskInputValue = $input->getTaskInputValueByUser($user->id)??new TaskInputValue();
-                            if ($TaskInput) {
+                            if (strlen($TaskInput)) {
                                 if ($taskInputValue->isNewRecord) {
                                     $taskInputValue->user_id = $user->id;
                                     $taskInputValue->task_input_id = $input->id;
                                 }
                                 $taskInputValue->val = $TaskInput;
                                 $taskInputValue->save();
-
                             } else {
                                 TaskInputValue::deleteAll(['user_id' => $user->id, 'task_input_id' => $input->id]);
                             }

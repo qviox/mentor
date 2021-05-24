@@ -8,12 +8,13 @@ use qviox\mentor\models\scores\SkillUserPoint;
 use qviox\mentor\models\scores\Task;
 use qviox\mentor\models\scores\TaskInputValue;
 use qviox\mentor\models\scores\Team;
+use qviox\mentor\models\search\TaskQuestionnaireSearch;
 use yii\web\Controller;
 use qviox\mentor\models\scores\UserTask;
 use qviox\mentor\models\scores\TaskInput;
 use yii\db\Exception;
 use Yii;
-class AjaxReactController extends ConfigController {
+class AjaxReactController extends  ConfigController {
 
     public function actionGetUsersRate()
     {
@@ -84,7 +85,6 @@ class AjaxReactController extends ConfigController {
         if (Yii::$app->user->isGuest) {
             throw new ForbiddenHttpException('Не авторизированный пользователь');
         }
-
         return TaskInputValue::find()
             ->joinWith('taskInput as ti')
             ->where(['user_id' => Yii::$app->user->id])
@@ -116,19 +116,24 @@ class AjaxReactController extends ConfigController {
     }
     public function actionGetTaskQuestionnare()
     {
-
-        if(!($post=Yii::$app->request->post()))
+        $post=Yii::$app->request->post();
+        if(!$post)
             return false;
-        $task=Task::findOne($post['task_id']);
+        $task=Task::findOne($post['taskId']);
         if(!$task)
             return false;
-        foreach(explode(',',$post['needParams']) as $needParam){
-            $taskInput=TaskInput::find()->where(['access_level'=>TaskInput::ACCESS_LEVEL_PUBLIC,'name'=>$needParam])->one();
-            if(!$taskInput)
-                return 'Не найден параметр ('.$needParam.') или он не общедоступный';
-            $taskInputs[]=$taskInput;
-        }
-        return LessonProjectWorksheets::find()->where(['show' => 1])->asArray()->all();
+        $searchModel = new  TaskQuestionnaireSearch();
+        $searchModel->task_id=$task->id;
+        $searchModel->filters[TaskQuestionnaireSearch::FilterByAccessLevel]=[TaskInput::ACCESS_LEVEL_PUBLIC];
+
+        if($post['filterParams'])
+            $searchModel->filters[TaskQuestionnaireSearch::FilterByVal]=$post['filterParams'];
+
+        $searchModel->makeQuery();
+var_dump(count($searchModel->query->all()));
+die();
+        return $searchModel->query->all();
+
     }
 
 }

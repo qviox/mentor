@@ -19,6 +19,7 @@ use yii\helpers\Url;
             ->label('Тип поля') ?>
         <?= $form->field($model, 'title')->textInput() ?>
         <?= $form->field($model, 'description')->textArea(['rows'=>4]) ?>
+        <?= $form->field($model, 'default_value')->textInput() ?>
         <?= $form->field($model, 'access_level')
             ->dropDownList(\qviox\mentor\models\scores\TaskInput::accessLevelLabels())
             ->label('Уровень доступа') ?>

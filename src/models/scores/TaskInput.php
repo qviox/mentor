@@ -15,8 +15,10 @@ class TaskInput extends \yii\db\ActiveRecord
     const TYPE_TEXT=2;
     const TYPE_FILE=3;
     const TYPE_BOOL_YES_NO=4;
+    const TYPE_NUBMER=5;
     const ACCESS_LEVEL_PRIVATE=1;
     const ACCESS_LEVEL_PUBLIC=2;
+    public $user_id;
     /**
      * {@inheritdoc}
      */
@@ -29,6 +31,7 @@ class TaskInput extends \yii\db\ActiveRecord
         return [
             [['task_id','type','access_level'], 'integer'],
             [['name','title','description'], 'string', 'max' => 255],
+            [['default_value'], 'string'],
             [['name','title','description','type','task_id'], 'required'],
             ['name', 'validateUniqueName'],
             [['task_id'], 'exist', 'skipOnError' => true, 'targetClass' => Task::class, 'targetAttribute' => ['task_id' => 'id']],
@@ -45,6 +48,7 @@ class TaskInput extends \yii\db\ActiveRecord
             'access_level' => 'Уровень доступа',
             'title' => 'Заголовок',
             'description' => 'Описание',
+            'default_value' => 'Значение по умолчанию',
         ];
     }
     public static function typeLabels()
@@ -97,7 +101,7 @@ class TaskInput extends \yii\db\ActiveRecord
     public function validateUniqueName($attribute, $params)
     {
 
-        if (in_array($this->$attribute, TaskInput::find()->select('name')->where(['task_id'=>$this->task_id])->column())) {
+        if ($this->isNewRecord && in_array($this->$attribute, TaskInput::find()->select('name')->where(['task_id'=>$this->task_id])->column())) {
             $this->addError($attribute, 'Название поля должно быть уникальным для этого задания".');
         }
     }
@@ -107,10 +111,11 @@ class TaskInput extends \yii\db\ActiveRecord
     public function saveTaskInputValue($value){
         if(!$this->validateTaskInputValue($value))
             return false;
-        $taskInputValue=new TaskInputValue();
-
-        $taskInputValue->task_input_id=$this->id;
-        $taskInputValue->user_id=Yii::$app->user->id;
+        $taskInputValue=TaskInputValue::find()->where(['task_input_id'=>$this->id,'user_id'=>$this->user_id])->one()??new TaskInputValue();
+        if($taskInputValue->isNewRecord){
+            $taskInputValue->task_input_id=$this->id;
+            $taskInputValue->user_id=$this->user_id;
+        }
         if($taskInputValue->taskInput->type==TaskInput::TYPE_FILE){
             $filesPathInfo=$taskInputValue->loadFile($value);
             $taskInputValue->val=$filesPathInfo['filesUrls'];
@@ -120,14 +125,22 @@ class TaskInput extends \yii\db\ActiveRecord
         if($taskInputValue->save()){
             return  $filesPathInfo['filesPaths']??$taskInputValue->val;
         }
-
         else
             throw new Exception(serialize($taskInputValue->errors));
+    }
+    public function saveDefaultTaskInputValue(){
+        $taskInputValue=new TaskInputValue();
+        $taskInputValue->task_input_id=$this->id;
+        $taskInputValue->user_id=$this->user_id;
+        $taskInputValue->val=$this->default_value;
+        if(!$taskInputValue->save())
+                throw new Exception('Cant save TaskInputValue with default value '.serialize($taskInputValue->errors));
+        return true;
     }
     public function getTaskInputValueByUser($userId){
            return TaskInputValue::find()->where(['user_id'=>$userId,'task_input_id'=>$this->id])->one();
     }
-    public function getTaskInputValue(){
-        return $this->hasOne(TaskInputValue::class, ['task_input_id' => 'id']);
-    }
+//    public function getTaskInputValue(){
+//        return $this->hasOne(TaskInputValue::class, ['task_input_id' => 'id']);
+//    }
 }

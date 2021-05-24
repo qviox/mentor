@@ -2,16 +2,19 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 $columns=[
-    ['class' => 'yii\grid\SerialColumn'],
+//    ['class' => 'yii\grid\SerialColumn'],
     [
-        'attribute' => 'id',
+        'attribute' => 'user_id',
+        'label'=>'ID',
 
     ],
     [
         'attribute' => 'email',
+        'label'=>'Email',
     ],
 ];
-foreach($task_inputs as $task_input){
+
+foreach($searchModel->task_inputs as $task_input){
 
     $arr=[
         'attribute'=>$task_input->name,
@@ -21,10 +24,13 @@ foreach($task_inputs as $task_input){
         $arr['format'] = 'raw';
         $arr['value']=function($model, $key, $index, $column){
             if($model[$column->attribute]){
+
                 $files=[];
                 $i=1;
                 foreach(explode(';',$model[$column->attribute]) as $fileurl){
-                    $files[]=Html::a("Файл $i",'/'.$fileurl);
+                    if($fileurl[0]!='/')
+                        $fileurl='/'.$fileurl;
+                        $files[]=Html::a("Файл $i", $fileurl);
                     $i++;
                 }
                 $files=implode(' | ',$files);
@@ -58,7 +64,8 @@ array_push($columns,
         'template' => '{update}',
         'buttons'=>[
             'update' => function ($url, $model, $key) {
-                return   Html::a('', Url::to(['task-questionnaire/update','taskId'=>Yii::$app->request->get('taskId'),'userId'=>$model['id']]), ['class' => 'glyphicon glyphicon-pencil']) ;
+
+                return   Html::a('', Url::to(['task-questionnaire/update','taskId'=>Yii::$app->request->get('taskId'),'userId'=>$model['user_id']]), ['class' => 'glyphicon glyphicon-pencil']) ;
             }
         ]
     ]

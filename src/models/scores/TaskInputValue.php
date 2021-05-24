@@ -33,7 +33,7 @@ class TaskInputValue extends \yii\db\ActiveRecord
 
     public function validateFilledValue($attribute, $params)
     {
-        if (self::findOne(['user_id'=>Yii::$app->user->id,'task_input_id'=>$this->$attribute])) {
+        if ($this->isNewRecord && self::findOne(['user_id'=>$this->user_id,'task_input_id'=>$this->$attribute])) {
             $this->addError($attribute, 'Поле['.$this->$attribute.'] уже заполнено');
         }
     }

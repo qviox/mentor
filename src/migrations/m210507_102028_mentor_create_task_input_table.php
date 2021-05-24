@@ -20,6 +20,7 @@ class m210507_102028_mentor_create_task_input_table extends Migration
             'name' => $this->string(),
             'title' => $this->string(),
             'description' => $this->string(),
+            'default_value' => $this->text()->null(),
         ]);
 
 
